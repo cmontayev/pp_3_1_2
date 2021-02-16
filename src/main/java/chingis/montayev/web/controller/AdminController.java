@@ -5,6 +5,7 @@ import chingis.montayev.web.model.User;
 import chingis.montayev.web.services.RoleService;
 import chingis.montayev.web.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,18 +27,21 @@ public class AdminController {
         this.roleService = roleService;
     }
 
-    @GetMapping
-    public String user(Principal principal, Model model) {
-        String name = principal.getName();
-        User admin = userService.getByName(name);
-        model.addAttribute("admin", admin);
-        model.addAttribute("roles", admin.getRoles());
-        return "admin";
-    }
+//    @GetMapping
+//    public String user(Principal principal, Model model) {
+//        String name = principal.getName();
+//        User admin = userService.getByName(name);
+//        model.addAttribute("admin", admin);
+//        model.addAttribute("roles", admin.getRoles());
+//        return "users";
+//    }
 
-    @GetMapping("/users")
-    public String getAllUsers(Model model) {
+    @GetMapping()
+    public String getAllUsers(Model model, @AuthenticationPrincipal User user) {
+        model.addAttribute("roles", roleService.getAll());
         model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("user", user);
+        model.addAttribute("userRoles", user.getRoles());
         return "users";
     }
 
@@ -64,7 +68,7 @@ public class AdminController {
         }
         user.setRoles(rolesSet);
         userService.add(user);
-        return "redirect:/admin/users";
+        return "redirect:/admin";
     }
 
     @GetMapping("/users/{id}/edit")
@@ -74,10 +78,10 @@ public class AdminController {
         return "edit";
     }
 
-    @PatchMapping("/users/{id}")
+    @PostMapping("/users/{id}")
     public String update(@PathVariable("id") Long id,
                          @ModelAttribute("user") User user,
-                         @RequestParam(value = "rolesNames") String[] roles)
+                         @RequestParam(value = "userRoles") String[] roles)
 
     {
         Set<Role> rolesSet = new HashSet<>();
@@ -86,13 +90,13 @@ public class AdminController {
         }
         user.setRoles(rolesSet);
         userService.update(user);
-        return "redirect:/admin/users";
+        return "redirect:/admin";
     }
 
-    @DeleteMapping("/users/{id}")
+    @PostMapping("/users/{id}/delete")
     public String delete(@PathVariable("id") Long id) {
         userService.delete(id);
-        return "redirect:/admin/users";
+        return "redirect:/admin";
     }
 //
 //    @ModelAttribute("headerMessage")
